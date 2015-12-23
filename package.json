@@ -25,7 +25,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/popomore/koa-proxy"
+    "url": "https://github.com/junfan/koa-proxy"
   },
   "homepage": "https://github.com/popomore/koa-proxy",
   "author": "popomore <sakura9515@gmail.com>",

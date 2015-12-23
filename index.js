@@ -2,7 +2,7 @@
 
 var join = require('url').resolve;
 var iconv = require('iconv-lite');
-var request = require('co-request').defaults({ jar: true });
+var request = require('co-request').defaults({ jar: true , followRedirect:false});
 
 module.exports = function(options) {
   options || (options = {});
@@ -67,7 +67,7 @@ function resolve(path, options) {
   var url = options.url;
   if (url) {
     if (!/^http/.test(url)) {
-      url = options.host ? join(options.host, url) : null;
+      url = options.host ? join(options.hostip || options.host, url) : null;
     }
     return ignoreQuery(url);
   }
@@ -80,7 +80,7 @@ function resolve(path, options) {
     path = options.map(path);
   }
 
-  return options.host ? join(options.host, path) : null;
+  return options.host ? join(options.hostip || options.host, path) : null;
 }
 
 function ignoreQuery(url) {
