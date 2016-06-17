@@ -2,10 +2,11 @@
 
 var join = require('url').resolve;
 var iconv = require('iconv-lite');
-var request = require('co-request').defaults({ jar: true , followRedirect:false});
+var coRequest = require('co-request');
 
 module.exports = function(options) {
   options || (options = {});
+  var request = coRequest.defaults({ jar: typeof options.jar === 'undefined' ? true : options.jar });
 
   if (!(options.host || options.map || options.url)) {
     throw new Error('miss options');
@@ -29,14 +30,23 @@ module.exports = function(options) {
     var parsedBody = getParsedBody(this);
 
     var opt = {
-      url: url + '?' + this.querystring,
+      url: url + (this.querystring ? '?' + this.querystring : ''),
       headers: this.header,
       encoding: null,
       method: this.method,
       body: parsedBody
     };
-    // set 'Host' header to options.host (without protocol prefix)
-    if (options.host) opt.headers.host = options.host.slice(options.host.indexOf('://')+3)
+
+    // set 'Host' header to options.host (without protocol prefix), strip trailing slash
+    if (options.host) opt.headers.host = options.host.slice(options.host.indexOf('://')+3).replace(/\/$/,'');
+
+    if (options.requestOptions) {
+      if (typeof options.requestOptions === 'function') {
+        opt = options.requestOptions(this.request, opt);
+      } else {
+        Object.keys(options.requestOptions).forEach(function (option) { opt[option] = options.requestOptions[option]; });
+      }
+    }
 
     var requestThunk = request(opt);
 
@@ -50,6 +60,10 @@ module.exports = function(options) {
 
     this.status = res.statusCode;
     for (var name in res.headers) {
+      // http://stackoverflow.com/questions/35525715/http-get-parse-error-code-hpe-unexpected-content-length
+      if (name === 'transfer-encoding') {
+        continue;
+      }
       this.set(name, res.headers[name]);
     }
 
